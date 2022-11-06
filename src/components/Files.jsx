@@ -1,10 +1,10 @@
 import { DriveFolderUploadRounded, UploadFileRounded } from "@mui/icons-material";
-import { Breadcrumbs, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from "@mui/material";
+import { Breadcrumbs, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Menu, MenuItem, Typography } from "@mui/material";
 import { addDoc, collection, getDocs, onSnapshot, orderBy, query, where } from "firebase/firestore";
 import { ref as storageRef, uploadBytesResumable } from 'firebase/storage';
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { auth, db, storage } from "../services/firebase";
 import { errorHandler } from "../services/utils";
 
@@ -15,6 +15,8 @@ export default function Files() {
   const [path, setPath] = useState("/")
   const [open, setOpen] = useState(false)
   const [breadCrumps, setBreadCrumps] = useState()
+  const [anchorEle, setAnchorEle] = useState(null)
+  const rightClickOpen = Boolean(anchorEle);
   const [user, loadingAuth] = useAuthState(auth)
 
   useEffect(()=> {
@@ -62,6 +64,8 @@ export default function Files() {
   const createDirectory = ()=> {
     const dirname = prompt("Enter Name of new folder", "New Folder "+new Date().getTime() )
 
+    if (!dirname) return
+
     addDoc(collection(db, "Files"), {
       filename : dirname,
       owner : user.uid,
@@ -71,7 +75,7 @@ export default function Files() {
     }).then(res=>{
       console.log("done..!")
     }).catch(errorHandler)
-  }  
+  }
 
   return (
     <section className="p-4 mt-2 flex flex-wrap relative">
@@ -83,10 +87,10 @@ export default function Files() {
       {
         !files ? <CircularProgress />
         : files.map(file=> {
-          if (file.type=="file") {
-            return <File name={file.filename} to={file.id} />
+          if (file.type=="folder") {
+            return <Folder name={file.filename} path={path} setPath={setPath} setAnchorEl={setAnchorEle} />
           } else {
-            return <Folder name={file.filename} path={path} setPath={setPath} />
+            return <File name={file.filename} to={file.id} setAnchorEl={setAnchorEle} />
           }
         })
       }
@@ -103,15 +107,40 @@ export default function Files() {
         </div>
 
         <FileUploadDialog open={open} setOpen={setOpen} path={path} setPath={setPath}/>
+        <RightClickMenu open={rightClickOpen} anchorEl={anchorEle} setAnchorEl={setAnchorEle} />
         
       </div>
     </section>
   )
 }
 
+function RightClickMenu({open, anchorEl, setAnchorEl}) {
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  return (<>
+    <Menu
+      id="basic-menu"
+      anchorEl={anchorEl}
+      open={open}
+      onClose={handleClose}
+      MenuListProps={{
+        'aria-labelledby': 'basic-button',
+      }}
+    >
+      <MenuItem onClick={handleClose}>Rename</MenuItem>
+      <MenuItem onClick={handleClose}>Move</MenuItem>
+      <MenuItem onClick={handleClose}>Share</MenuItem>
+    </Menu>
+  </>)
+}
+
 function FileUploadDialog({ open, setOpen, path, setPath }) {
   const [selectedFile, setSelectedFile] = useState(null);
   const [progress, setProgress] = useState(null)
+  const [limit, setLimit] = useState(false)
   const [user] = useAuthState(auth)
 
   const handleDialogClose = ()=> {
@@ -124,7 +153,7 @@ function FileUploadDialog({ open, setOpen, path, setPath }) {
         filename : selectedFile.name,
         owner : user.uid,
         path : path,
-        type : "file",
+        type : selectedFile.type,
         shared : []
       })
 
@@ -158,38 +187,62 @@ function FileUploadDialog({ open, setOpen, path, setPath }) {
     <Dialog open={open} onClose={handleDialogClose}>
       <DialogTitle>Upload File</DialogTitle>
       <DialogContent>
-        { progress && <CircularProgress variant="determinate" value={progress} />}
+        { progress && <CircularProgress variant="determinate" value={progress} />}<br/>
         <input 
           type="file" 
           onChange={(e)=>{
             const file = e.target.files ? e.target.files[0] : undefined;
             setSelectedFile(file);
+            if( (file.size/1024/1024) > 10 ) setLimit(true)
+            else setLimit(false) 
           }} 
-        />
+        /><br/>
+        { limit ? <span className="text-red-600 block mt-4">Max File size is 10MB</span> : null}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleFileSubmit}>Submit</Button>
+        <Button onClick={handleFileSubmit} disabled={limit}>Submit</Button>
       </DialogActions>
     </Dialog>
   </>
 }
 
-function Folder({name, path, setPath}) {
+function Folder({name, path, setPath, setAnchorEl}) {
+  const thisRef = useRef()
+
+  const handleOpenFolder = ()=> {
+    setPath(path=="/" ? path+=name : path+=("/"+name))
+  }
+
+  const handleOpenMenu = (e)=> {
+    setAnchorEl(thisRef.current)
+    e.preventDefault()
+  }
+
   return (
-    <div className="text-center w-fit mx-4 cursor-pointer" onClick={()=>setPath(path=="/" ? path+=name : path+=("/"+name))}>
+    <div className="text-center w-fit mx-4" ref={thisRef} onContextMenu={handleOpenMenu} onDoubleClick={handleOpenFolder}>
       <img src="/folder.png" className="h-24 select-none" alt="folder icon" />
       <span>{name}</span>
     </div>
   )
 }
 
-function File({name, to}) {
+function File({name, to, setAnchorEl}) {
+  const navigate = useNavigate()
+  const thisRef = useRef()
+
+  const handleOpenFile = ()=> {
+    navigate("/file/"+to)
+  }
+
+  const handleOpenMenu = (e)=> {
+    setAnchorEl(thisRef.current)
+    e.preventDefault()
+  }
+
   return (
-    <Link to={"/file/"+to}>
-      <div className="text-center w-fit mx-4">
-        <img src="/file.png" className="h-24 select-none" alt="file icon" />
-        <span>{name}</span>
-      </div>
-    </Link>
+    <div className="text-center w-fit mx-4" ref={thisRef} onContextMenu={handleOpenMenu} onDoubleClick={handleOpenFile}>
+      <img src="/file.png" className="h-24 select-none" alt="file icon" />
+      <span>{name}</span>
+    </div>
   )
 }

@@ -1,5 +1,5 @@
 import { Download, Share } from "@mui/icons-material";
-import { Button, Typography } from "@mui/material";
+import { Button, CircularProgress, Typography } from "@mui/material";
 import { doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
@@ -22,8 +22,16 @@ export default function DisplayFile() {
     }
 
     else if(loaderData.status=="success") {
-      setFileData(loaderData.data)
+
+      getDownloadURL(ref(storage, loaderData.data.owner+"/"+loaderData.data.id)).then(url=>{
+        setFileData({
+          downloadURL : url,
+          ...loaderData.data
+        })
+      }).catch(errorHandler)
     }
+
+    
 
     return ()=> document.body.classList.remove("bg-black")
   }, [])
@@ -33,11 +41,7 @@ export default function DisplayFile() {
   }
 
   const handleDownload = ()=> {
-    getDownloadURL(ref(storage, fileData.owner+"/"+fileData.id)).then(url=>{
-      window.open(url)
-
-    }).catch(errorHandler)
-
+    window.open(fileData.downloadURL)
   }
 
   return (
@@ -49,14 +53,13 @@ export default function DisplayFile() {
       >
         {fileData && fileData.filename}
       </Typography>
-      <div className="w-9/12">
         {
           // Preview element
+          !fileData ? <CircularProgress /> :
+          fileData.type.includes("text") ? <iframe src={fileData.downloadURL} style={{height: "80vh"}} className="w-1/3 bg-white text-black" ></iframe> :
+          fileData.type.includes("image") ? <img src={fileData.downloadURL} className="h-96"/> :
           <img src="/file.png" className="h-96"/>
-          // <iframe src="/myFile.txt" className="w-1/3 bg-white text-black" ></iframe>
         }
-
-      </div>
       <div className="absolute right-2 top-2">
         <Button onClick={handleDownload} variant="contained">
           <Download/>
@@ -116,7 +119,7 @@ export async function loader ({ params }) {
   } catch(err) {
     res = {
       status : "failed",
-      err : "Some Error Occured"
+      err : "File Not Found or some server error."
     }
     console.log(err);
   }
