@@ -13,8 +13,9 @@ import Typography from '@mui/material/Typography';
 import Container from '@mui/material/Container';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { auth, gprovider } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
+import GoogleSignIn from './GoogleSignIn';
 
 function Copyright(props) {
   return (
@@ -88,10 +89,6 @@ export default function SignIn({setValue}) {
               id="password"
               autoComplete="current-password"
             />
-            {/* <FormControlLabel
-              control={<Checkbox value="remember" color="primary" />}
-              label="Remember me"
-            /> */}
             <Button
               type="submit"
               fullWidth
@@ -112,6 +109,9 @@ export default function SignIn({setValue}) {
                 </button>
               </Grid>
             </Grid>
+            <center>
+              <GoogleSignIn/>
+            </center>
           </Box>
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />

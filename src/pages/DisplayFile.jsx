@@ -1,5 +1,5 @@
 import { Download, Share } from "@mui/icons-material";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import { doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
@@ -34,13 +34,6 @@ export default function DisplayFile() {
 
   const handleDownload = ()=> {
     getDownloadURL(ref(storage, fileData.owner+"/"+fileData.id)).then(url=>{
-      // const xhr = new XMLHttpRequest();
-      // xhr.responseType = 'blob';
-      // xhr.onload = (event) => {
-      //   const blob = xhr.response;
-      // };
-      // xhr.open('GET', url);
-      // xhr.send();
       window.open(url)
 
     }).catch(errorHandler)
@@ -49,6 +42,13 @@ export default function DisplayFile() {
 
   return (
     <center className="relative">
+      <Typography
+        variant="h5"
+        component="h1"
+        className="pl-4 text-left text-white pt-4"
+      >
+        {fileData && fileData.filename}
+      </Typography>
       <div className="w-9/12">
         {
           // Preview element

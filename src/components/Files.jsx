@@ -81,7 +81,7 @@ export default function Files() {
         </Breadcrumbs>
       </div>
       {
-        !files ? <p>Loading...</p>
+        !files ? <CircularProgress />
         : files.map(file=> {
           if (file.type=="file") {
             return <File name={file.filename} to={file.id} />

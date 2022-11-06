@@ -16,6 +16,7 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';
+import GoogleSignIn from './GoogleSignIn';
 
 function Copyright(props) {
   return (
@@ -106,6 +107,9 @@ export default function SignUp({setValue}) {
             >
               Create Account
             </Button>
+            <center>
+              <GoogleSignIn/>
+            </center>
           </Box>
         </Box>
         <Copyright sx={{ mt: 8, mb: 4 }} />
