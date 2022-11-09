@@ -4,6 +4,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { getDownloadURL, ref } from "firebase/storage";
 import { useEffect, useState } from "react";
 import { useLoaderData, useNavigate } from "react-router-dom";
+import ShareDialog from "../components/ShareDialog";
 import { auth, db, storage } from "../services/firebase";
 import { errorHandler } from "../services/utils";
 
@@ -12,6 +13,7 @@ export default function DisplayFile() {
   const loaderData = useLoaderData();
   const navigate = useNavigate()
   const [fileData, setFileData] = useState(null)
+  const [shareDialOpen, setShareDialOpen] = useState(false)
 
   useEffect(()=>{
     document.body.classList.add("bg-black")
@@ -37,7 +39,7 @@ export default function DisplayFile() {
   }, [])
 
   const handleShare = ()=> {
-
+    setShareDialOpen(true)
   }
 
   const handleDownload = ()=> {
@@ -56,7 +58,7 @@ export default function DisplayFile() {
         {
           // Preview element
           !fileData ? <CircularProgress /> :
-          fileData.type.includes("text") ? <iframe src={fileData.downloadURL} style={{height: "80vh"}} className="w-1/3 bg-white text-black" ></iframe> :
+          fileData.type.includes("text") ? <iframe src={fileData.downloadURL} style={{height: "80vh"}} className="w-2/3 md:w-1/3 bg-white text-black" ></iframe> :
           fileData.type.includes("image") ? <img src={fileData.downloadURL} className="h-96"/> :
           <img src="/file.png" className="h-96"/>
         }
@@ -65,10 +67,15 @@ export default function DisplayFile() {
           <Download/>
         </Button>
         {
-          loaderData && loaderData.access_level=="owner" ? <Button onClick={handleShare} variant="contained">
+          loaderData && loaderData.access_level=="owner" ? <>
+            <Button onClick={handleShare} variant="contained">
               <Share/>
             </Button>
+          </>
           : null
+        }
+        {
+          fileData && <ShareDialog handleClose={()=>{setShareDialOpen(false)}} open={shareDialOpen} emails={fileData.shared} file_id={fileData.id} is_Public={fileData.isPublic} />
         }
       </div>
     </center>
@@ -97,8 +104,20 @@ export async function loader ({ params }) {
       }
     }
 
+    // Check if the file is public
+    else if (data.isPublic) {
+      res = {
+        status : "success",
+        access_level : "shared",
+        data : {
+          id : snapshot.id,
+          ...data
+        }
+      }
+    }
+
     // Check if the user has file access or not
-    else if (data.shared.includes(auth.currentUser.uid)) {
+    else if (data.shared.includes(auth.currentUser.email)) {
       res = {
         status : "success",
         access_level : "shared",

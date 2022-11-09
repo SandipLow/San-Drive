@@ -2,8 +2,8 @@ import { Button, Typography } from "@mui/material";
 import { getAdditionalUserInfo, signInWithPopup } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
-import { auth, db, gprovider } from "../services/firebase";
-import { errorHandler } from "../services/utils";
+import { auth, db, gprovider } from "../../services/firebase";
+import { errorHandler } from "../../services/utils";
 
 export default function GoogleSignIn() {
 

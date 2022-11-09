@@ -16,6 +16,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { Cloud } from '@mui/icons-material';
 
 function Navbar() {
 
@@ -57,7 +58,7 @@ function Navbar() {
         <AppBar position="static">
             <Container maxWidth="xl">
                 <Toolbar disableGutters>
-                    <AdbIcon sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
+                    <Cloud sx={{ display: { xs: 'none', md: 'flex' }, mr: 1 }} />
                     <Typography
                         variant="h6"
                         noWrap
@@ -73,7 +74,7 @@ function Navbar() {
                             textDecoration: 'none',
                         }}
                     >
-                        LOGO
+                        SAN DRIVE
                     </Typography>
 
                     <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -112,7 +113,7 @@ function Navbar() {
                             }
                         </Menu>
                     </Box>
-                    <AdbIcon sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
+                    <Cloud sx={{ display: { xs: 'flex', md: 'none' }, mr: 1 }} />
                     <Typography
                         variant="h5"
                         noWrap
@@ -129,7 +130,7 @@ function Navbar() {
                             textDecoration: 'none',
                         }}
                     >
-                        LOGO
+                        SAN DRIVE
                     </Typography>
                     <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>
                         {
@@ -168,9 +169,6 @@ function Navbar() {
                                                 open={Boolean(anchorElUser)}
                                                 onClose={handleCloseUserMenu}
                                             >
-                                                <MenuItem onClick={handleCloseUserMenuAccount}>
-                                                    <Typography textAlign="center">Account</Typography>
-                                                </MenuItem>
                                                 <MenuItem onClick={handleCloseUserMenuLogout}>
                                                     <Typography textAlign="center">Logout</Typography>
                                                 </MenuItem>

@@ -4,8 +4,8 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box'
-import SignIn from '../components/SignIn';
-import SignUp from '../components/SignUp';
+import SignIn from '../components/Auth/SignIn';
+import SignUp from '../components/Auth/SignUp';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '../services/firebase';
 import { useNavigate } from 'react-router-dom';

@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useNavigate } from "react-router-dom";
-import Files from "../components/Files";
+import Files from "../components/Files/Files";
 import { auth } from "../services/firebase";
 
 export default function Home() {
