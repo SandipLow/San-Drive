@@ -48,36 +48,38 @@ export default function DisplayFile() {
 
   return (
     <center className="relative">
-      <Typography
-        variant="h5"
-        component="h1"
-        className="pl-4 text-left text-white pt-4"
-      >
-        {fileData && fileData.filename}
-      </Typography>
-        {
-          // Preview element
-          !fileData ? <CircularProgress /> :
-          fileData.type.includes("text") ? <iframe src={fileData.downloadURL} style={{height: "80vh"}} className="w-2/3 md:w-1/3 bg-white text-black" ></iframe> :
-          fileData.type.includes("image") ? <img src={fileData.downloadURL} className="h-96"/> :
-          <img src="/file.png" className="h-96"/>
-        }
-      <div className="absolute right-2 top-2">
-        <Button onClick={handleDownload} variant="contained">
-          <Download/>
-        </Button>
-        {
-          loaderData && loaderData.access_level=="owner" ? <>
-            <Button onClick={handleShare} variant="contained">
-              <Share/>
-            </Button>
-          </>
-          : null
-        }
-        {
-          fileData && <ShareDialog handleClose={()=>{setShareDialOpen(false)}} open={shareDialOpen} emails={fileData.shared} file_id={fileData.id} is_Public={fileData.isPublic} />
-        }
+      <div className="w-full flex justify-between">
+        <Typography
+          variant="h5"
+          component="h1"
+          className="pl-4 text-left text-white pt-4 overflow-x-hidden text-ellipsis whitespace-nowrap"
+        >
+          {fileData && fileData.filename}
+        </Typography>
+        <div className="flex p-2">
+          <Button onClick={handleDownload} sx={{mr: 1}} variant="contained">
+            <Download/>
+          </Button>
+          {
+            loaderData && loaderData.access_level=="owner" ? <>
+              <Button onClick={handleShare} variant="contained">
+                <Share/>
+              </Button>
+            </>
+            : null
+          }
+          {
+            fileData && <ShareDialog handleClose={()=>{setShareDialOpen(false)}} open={shareDialOpen} emails={fileData.shared} file_id={fileData.id} is_Public={fileData.isPublic} />
+          }
+        </div>
       </div>
+      {
+        // Preview element
+        !fileData ? <CircularProgress /> :
+        fileData.type.includes("text") ? <iframe src={fileData.downloadURL} style={{height: "80vh"}} className="mt-4 w-2/3 md:w-1/3 bg-white text-black" ></iframe> :
+        fileData.type.includes("image") ? <img src={fileData.downloadURL} className="mt-4 h-96"/> :
+        <img src="/file.png" className="h-96"/>
+      }
     </center>
   )
 }

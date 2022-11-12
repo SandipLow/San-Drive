@@ -20,9 +20,12 @@ export default function Files() {
   const rightClickOpen = Boolean(anchorEle);
   const [user, loadingAuth] = useAuthState(auth)
   const [search, setSearch] = useState("")
+  const [errFiles, setErrFiles] = useState(false)
 
   useEffect(()=> {
 
+    // Convert to Path from a Path to given index
+    // For example : toPath("/a/b/c", 2) => "/a/b"
     function toPath(path, index) {
       let str = "/"
       for(let i=1; i<=index; i++) {
@@ -31,6 +34,7 @@ export default function Files() {
       return str;
     }
 
+    // Making Links for each breadcrump
     let paths = path.split("/").map((p, i, arr)=> {
       if (i==arr.length-1) {
         return <Typography key={i} component="span" >{p}</Typography>
@@ -47,18 +51,27 @@ export default function Files() {
 
     setBreadCrumps(paths)
 
+    // return if auth is not loaded
     if(loadingAuth) return
 
+    // query files from given path
     const q = query(collection(db, "Files"), where("owner", "==", user.uid), where("path", "==", path))
 
-    const unsubscribe = onSnapshot(q, (res)=> {
-      setFiles(res.docs.map(doc=>{
-        return {
-          id : doc.id,
-          ...doc.data()
-        }
-      }))
-    })
+    const unsubscribe = onSnapshot(q, 
+      (res)=> {
+        setFiles(res.docs.map(doc=>{
+          return {
+            id : doc.id,
+            ...doc.data()
+          }
+        }))
+        setErrFiles(false)
+      },
+      (err)=> {
+        setErrFiles(true)
+        console.log(err);
+      }
+    )
 
     return () => unsubscribe()
 
@@ -83,16 +96,24 @@ export default function Files() {
   }
 
   return (
-    <section className="p-4 mt-2 flex flex-wrap relative">
-      <div className="w-full flex">
+    <section className="p-4 mt-2 md:relative">
+      {/* Search and Breadcrump */}
+      <div className="w-full flex flex-wrap">
         <TextField id="filled-basic" label="Search File" variant="outlined" value={search} onChange={(e)=>setSearch(e.target.value)} />
         <Breadcrumbs sx={{mt: 2, mb: 2, ml: 4}} separator="›" aria-label="breadcrumb">
           {breadCrumps}
         </Breadcrumbs>
       </div>
+      {/* Files */}
+      <div className="w-full m-2 p-2 rounded-lg bg-slate-100 flex flex-wrap">
       {
-        !files ? <CircularProgress />
-        : files.map(file=> {
+        errFiles ? <div className="w-full text-center"><img src="/Error.jpeg" className="h-48 inline-block" alt="error connecting...!" /></div> :
+        !files ? <div className="w-full text-center"><CircularProgress /></div> :
+        files.length==0 ? <div className="w-full text-center">
+          <img src="/empty.png" className="h-48 inline-block" alt="Nothing Here.." /><br />
+          <span>No Files here</span>
+        </div> :
+        files.map(file=> {
           if (search == "") {
 
             if (file.type=="folder") {
@@ -117,21 +138,23 @@ export default function Files() {
           }
         })
       }
-      <div className="absolute right-2 top-2 flex p-2 w-fit">
-        <div className="mx-2">
+      </div>
+      {/* Upload */}
+      <div className="absolute md:flex right-2 bottom-2 md:top-2 p-2 w-fit">
+        <div className="my-2 md:mx-2">
           <Button onClick={()=>setOpen(true)} variant="outlined">
             <UploadFileRounded />
           </Button>
         </div>
-        <div className="mx-2">
+        <div className="my-2 md:mx-2">
           <Button onClick={createDirectory} variant="outlined">
             <DriveFolderUploadRounded />
           </Button>
         </div>
-
-        <FileUploadDialog open={open} setOpen={setOpen} path={path} setPath={setPath}/>
-        <RightClickMenu open={rightClickOpen} anchorEl={anchorEle} setAnchorEl={setAnchorEle} emails={["To be implemented"]} />
       </div>
+
+      <FileUploadDialog open={open} setOpen={setOpen} path={path} setPath={setPath}/>
+      <RightClickMenu open={rightClickOpen} anchorEl={anchorEle} setAnchorEl={setAnchorEle} emails={["To be implemented"]} />
     </section>
   )
 }
@@ -150,8 +173,9 @@ function Folder({name, path, docId, setPath, setAnchorEl}) {
   }
 
   return (
-    <div className="text-center w-fit mx-4" docid={docId} type="folder" ref={thisRef} path={path=="/" ? path+name : path+("/"+name)} onContextMenu={handleOpenMenu} onDoubleClick={handleOpenFolder}>
-      <img src="/folder.png" className="h-24 select-none" alt="folder icon" />
+    <div className="text-center w-32 m-2 relative select-none" docid={docId} type="folder" ref={thisRef} path={path=="/" ? path+name : path+("/"+name)} onContextMenu={handleOpenMenu} onDoubleClick={handleOpenFolder}>
+      <div className="absolute w-full h-full"></div>
+      <img src="/folder.png" className="w-fit h-24 inline-block" alt="folder icon" />
       <span>{name}</span>
     </div>
   )
@@ -171,8 +195,9 @@ function File({name, docId, setAnchorEl}) {
   }
 
   return (
-    <div className="text-center w-fit mx-4" docid={docId} type="file" ref={thisRef} onContextMenu={handleOpenMenu} onDoubleClick={handleOpenFile}>
-      <img src="/file.png" className="h-24 select-none" alt="file icon" />
+    <div className="text-center w-32 m-2 relative select-none" docid={docId} type="file" ref={thisRef} onContextMenu={handleOpenMenu} onDoubleClick={handleOpenFile}>
+      <div className="absolute w-full h-full"></div>
+      <img src="/file.png" className="w-fit h-24 inline-block" alt="file icon" />
       <span>{name}</span>
     </div>
   )
